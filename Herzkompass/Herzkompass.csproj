@@ -8,4 +8,20 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="benutzer.png" />
+    <None Remove="icon.png" />
+    <None Remove="logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="benutzer.png" />
+    <Resource Include="icon.png" />
+    <Resource Include="logo.png" />
+  </ItemGroup>
+
 </Project>

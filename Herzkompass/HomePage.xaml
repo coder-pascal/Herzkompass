@@ -1,0 +1,38 @@
+﻿<Page x:Class="Herzkompass.HomePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Herzkompass" Background="White"
+      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Background="#F4C2D7" Grid.Column="0" Margin="0,0,0,-1080">
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0">
+                <Image Source="logo.png" Height="100" Width="100" Margin="10" HorizontalAlignment="Center"/>
+                <TextBlock Text="Herzkompass" FontWeight="Bold" FontSize="24" Margin="0,20,0,40" HorizontalAlignment="Center" />
+                <Button Content="Startseite" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Profil" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Einstellungen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_1"/>
+                <Button Content="Hilfe" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Ausloggen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click" />
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Column="1" Margin="40" VerticalAlignment="Top">
+            <TextBlock x:Name="txtWelcomeUser" FontWeight="Bold" FontSize="32" Margin="0,0,0,30" Text="Willkommen!"/>
+            <TextBlock x:Name="txtNotificationCount" FontSize="20" Margin="0,0,0,40" Text="Du hast neue Benachrichtigungen."/>
+            <TextBlock Text="Dein Profil:" FontWeight="Bold" FontSize="26" Margin="0,30,0,15"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,40">
+                <Image x:Name="imgUserProfile" Height="150" Width="150" Margin="0,0,15,0"/>
+                <TextBlock x:Name="txtUserProfileInfo" FontSize="20" Text="Hier stehen deine Profilinformationen"/>
+            </StackPanel>
+            <TextBlock x:Name="txtFinalMessage" FontSize="18" Margin="0,30,0,0" Text="Vielen Dank für deine Nutzung von Herzkompass!"/>
+        </StackPanel>
+    </Grid>
+</Page>
