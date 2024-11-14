@@ -49,5 +49,10 @@ namespace Herzkompass
         {
             this.NavigationService.Navigate(new SettingsPage());
         }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new SwipePage());
+        }
     }
 }

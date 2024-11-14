@@ -19,7 +19,7 @@
                 <Image Source="logo.png" Height="100" Width="100" Margin="10" HorizontalAlignment="Center"/>
                 <TextBlock Text="Herzkompass" FontWeight="Bold" FontSize="24" Margin="0,20,0,40" HorizontalAlignment="Center" />
                 <Button Content="Startseite" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click"/>
-                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_2"/>
                 <Button Content="Profil" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
                 <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
                 <Button Content="Einstellungen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>

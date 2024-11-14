@@ -23,7 +23,7 @@
 
                 <!-- Menüelemente -->
                 <Button Content="Startseite" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_1"/>
-                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_3"/>
                 <Button Content="Profil" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
                 <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
                 <Button Content="Einstellungen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_2"/>

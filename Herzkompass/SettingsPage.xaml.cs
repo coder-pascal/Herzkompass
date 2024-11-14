@@ -256,5 +256,10 @@ namespace Herzkompass
         {
             this.NavigationService.Navigate(new LogoutPage());
         }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new SwipePage());
+        }
     }
 }
