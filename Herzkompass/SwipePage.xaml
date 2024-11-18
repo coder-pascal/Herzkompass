@@ -22,11 +22,11 @@
 
                 <!-- Sidebar-Buttons -->
                 <Button Content="Startseite" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click"/>
-                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
-                <Button Content="Profil" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
-                <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_3"/>
+                <Button Content="Likes" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_4"/>
+                <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_5"/>
                 <Button Content="Einstellungen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_1"/>
-                <Button Content="Hilfe" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center"/>
+                <Button Content="Hilfe" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_6"/>
                 <Button Content="Ausloggen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_2"/>
             </StackPanel>
         </Grid>

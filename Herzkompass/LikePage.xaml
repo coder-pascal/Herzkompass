@@ -1,7 +1,7 @@
-﻿<Page x:Class="Herzkompass.FavoritePage"
+﻿<Page x:Class="Herzkompass.LikePage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      Title="Favoriten"
+      Title="Likes"
       Background="White"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch">
@@ -21,22 +21,22 @@
                 <TextBlock Text="Herzkompass" FontWeight="Bold" FontSize="24" Margin="0,20,0,40" HorizontalAlignment="Center" />
 
                 <!-- Sidebar Buttons -->
-                <Button Content="Startseite" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_1"/>
-                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_2"/>
-                <Button Content="Likes" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_3"/>
-                <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_4"/>
-                <Button Content="Einstellungen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_5"/>
-                <Button Content="Hilfe" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_6"/>
-                <Button Content="Ausloggen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_7"/>
+                <Button Content="Startseite" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click"/>
+                <Button Content="Entdecken" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_1"/>
+                <Button Content="Likes" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_2"/>
+                <Button Content="Favoriten" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_3"/>
+                <Button Content="Einstellungen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_4"/>
+                <Button Content="Hilfe" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_5"/>
+                <Button Content="Ausloggen" FontSize="18" Margin="10" Width="220" HorizontalAlignment="Center" Click="Button_Click_6"/>
             </StackPanel>
         </Grid>
 
-        <!-- Main Content Area for Favorite Profiles -->
+        <!-- Main Content Area for Liked Profiles -->
         <StackPanel Grid.Column="1" Margin="20">
-            <TextBlock Text="Favoriten" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,20,0,20"/>
+            <TextBlock Text="Likes" FontSize="32" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,20,0,20"/>
 
             <!-- Profile Items Container -->
-            <ItemsControl x:Name="FavoriteProfilesContainer" ItemsSource="{Binding FavoriteProfiles}">
+            <ItemsControl x:Name="LikedProfilesContainer" ItemsSource="{Binding LikedProfiles}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
@@ -52,9 +52,13 @@
                             <TextBlock Text="{Binding Age}" FontSize="14" HorizontalAlignment="Center"/>
                             <TextBlock Text="{Binding Location}" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
-                            <!-- Mülleimer-Button -->
-                            <Button Content="🗑" FontSize="16" Width="30" Height="30" HorizontalAlignment="Center"
-                                    Tag="{Binding ProfileId}" Click="OnRemoveFavoriteClick" />
+                            <!-- Buttons: Remove Like & Add to Favorites -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+                                <Button Content="🗑" FontSize="16" Width="30" Height="30" Margin="5"
+                                        Tag="{Binding ProfileId}" Click="OnRemoveLikeClick" />
+                                <Button Content="⭐" FontSize="16" Width="30" Height="30" Margin="5"
+                                        Tag="{Binding ProfileId}" Click="OnAddToFavoritesClick" />
+                            </StackPanel>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

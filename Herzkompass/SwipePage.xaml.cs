@@ -170,6 +170,26 @@ namespace Herzkompass
         {
             this.NavigationService.Navigate(new LogoutPage());
         }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            //leer da auf eigene Seite
+        }
+
+        private void Button_Click_4(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new LikePage());
+        }
+
+        private void Button_Click_5(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new FavoritePage());
+        }
+
+        private void Button_Click_6(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new HelpPage());
+        }
     }
 
     public class Profile

@@ -1,39 +1,39 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 using MySqlConnector;
 
 namespace Herzkompass
 {
-    public partial class FavoritePage : Page
+    public partial class LikePage : Page
     {
         private DatabaseManager dbManager;
         private int loggedInUserId = UserSession.UserId;
-        public ObservableCollection<FavoriteProfile> FavoriteProfiles { get; set; }
+        public ObservableCollection<LikedProfile> LikedProfiles { get; set; }
 
-        public FavoritePage()
+        public LikePage()
         {
             InitializeComponent();
             dbManager = new DatabaseManager();
             dbManager.InitConnection();
 
-            FavoriteProfiles = new ObservableCollection<FavoriteProfile>();
+            LikedProfiles = new ObservableCollection<LikedProfile>();
             DataContext = this; // Bind the page's data context to itself for binding
-            LoadFavoriteProfiles();
+            LoadLikedProfiles();
         }
 
-        private void LoadFavoriteProfiles()
+        private void LoadLikedProfiles()
         {
             try
             {
                 string query = @"
                     SELECT a.id, a.benutzername, kp.profilbild, kp.geburtstag, kp.wohnort
-                    FROM profile_favorites pf
-                    JOIN accounts a ON pf.favorite_profile_id = a.id
+                    FROM profile_likes pl
+                    JOIN accounts a ON pl.liked_profile_id = a.id
                     LEFT JOIN kundenprofil kp ON a.id = kp.account_id
-                    WHERE pf.favoriter_id = @loggedInUserId";
+                    WHERE pl.liker_id = @loggedInUserId";
 
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
@@ -41,7 +41,7 @@ namespace Herzkompass
 
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
-                        FavoriteProfiles.Clear();
+                        LikedProfiles.Clear();
                         while (reader.Read())
                         {
                             int profileId = reader.GetInt32("id");
@@ -52,7 +52,7 @@ namespace Herzkompass
 
                             int? age = birthday.HasValue ? CalculateAge(birthday.Value) : (int?)null;
 
-                            FavoriteProfiles.Add(new FavoriteProfile
+                            LikedProfiles.Add(new LikedProfile
                             {
                                 ProfileId = profileId,
                                 Username = username,
@@ -68,7 +68,7 @@ namespace Herzkompass
             }
             catch (MySqlException ex)
             {
-                MessageBox.Show("Fehler beim Laden der Favoriten: " + ex.Message, "Fehler");
+                MessageBox.Show("Fehler beim Laden der Likes: " + ex.Message, "Fehler");
             }
             catch (Exception ex)
             {
@@ -84,11 +84,27 @@ namespace Herzkompass
             return age;
         }
 
-        private void RemoveFavorite(int profileId)
+        private void OnRemoveLikeClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is int profileId)
+            {
+                RemoveLike(profileId);
+            }
+        }
+
+        private void OnAddToFavoritesClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is int profileId)
+            {
+                AddToFavorites(profileId);
+            }
+        }
+
+        private void RemoveLike(int profileId)
         {
             try
             {
-                string query = "DELETE FROM profile_favorites WHERE favoriter_id = @loggedInUserId AND favorite_profile_id = @profileId";
+                string query = "DELETE FROM profile_likes WHERE liker_id = @loggedInUserId AND liked_profile_id = @profileId";
 
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
@@ -97,16 +113,16 @@ namespace Herzkompass
                     cmd.ExecuteNonQuery();
 
                     // Entferne das Profil aus der Liste
-                    var profileToRemove = FavoriteProfiles.FirstOrDefault(p => p.ProfileId == profileId);
+                    var profileToRemove = LikedProfiles.FirstOrDefault(p => p.ProfileId == profileId);
                     if (profileToRemove != null)
                     {
-                        FavoriteProfiles.Remove(profileToRemove);
+                        LikedProfiles.Remove(profileToRemove);
                     }
                 }
             }
             catch (MySqlException ex)
             {
-                MessageBox.Show("Fehler beim Entfernen des Favoriten: " + ex.Message, "Fehler");
+                MessageBox.Show("Fehler beim Entfernen des Likes: " + ex.Message, "Fehler");
             }
             catch (Exception ex)
             {
@@ -114,56 +130,92 @@ namespace Herzkompass
             }
         }
 
-        private void OnRemoveFavoriteClick(object sender, RoutedEventArgs e)
+        private void AddToFavorites(int profileId)
         {
-            if (sender is Button button && button.Tag is int profileId)
+            try
             {
-                RemoveFavorite(profileId);
+                // Start a transaction to ensure data consistency
+                using (var transaction = dbManager.Connection.BeginTransaction())
+                {
+                    // Füge das Profil zu den Favoriten hinzu
+                    string insertQuery = "INSERT INTO profile_favorites (favoriter_id, favorite_profile_id) VALUES (@loggedInUserId, @profileId)";
+                    using (MySqlCommand insertCmd = new MySqlCommand(insertQuery, dbManager.Connection, transaction))
+                    {
+                        insertCmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId);
+                        insertCmd.Parameters.AddWithValue("@profileId", profileId);
+                        insertCmd.ExecuteNonQuery();
+                    }
+
+                    // Entferne das Profil aus der Likes-Tabelle
+                    string deleteQuery = "DELETE FROM profile_likes WHERE liker_id = @loggedInUserId AND liked_profile_id = @profileId";
+                    using (MySqlCommand deleteCmd = new MySqlCommand(deleteQuery, dbManager.Connection, transaction))
+                    {
+                        deleteCmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId);
+                        deleteCmd.Parameters.AddWithValue("@profileId", profileId);
+                        deleteCmd.ExecuteNonQuery();
+                    }
+
+                    // Commit the transaction
+                    transaction.Commit();
+
+                    // Entferne das Profil aus der LikedProfiles-Liste (UI)
+                    var profileToRemove = LikedProfiles.FirstOrDefault(p => p.ProfileId == profileId);
+                    if (profileToRemove != null)
+                    {
+                        LikedProfiles.Remove(profileToRemove);
+                    }
+
+                    MessageBox.Show("Profil wurde zu den Favoriten hinzugefügt!", "Erfolg");
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show("Fehler beim Hinzufügen zu den Favoriten: " + ex.Message, "Fehler");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten: " + ex.Message, "Fehler");
             }
         }
 
+        // Navigation
         private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            this.NavigationService.Navigate(new SwipePage());
-        }
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new HomePage());
         }
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
+        private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new SwipePage());
         }
 
-        private void Button_Click_3(object sender, RoutedEventArgs e)
-        {
-            this.NavigationService.Navigate(new LikePage());
-        }
-
-        private void Button_Click_4(object sender, RoutedEventArgs e)
+        private void Button_Click_2(object sender, RoutedEventArgs e)
         {
             //leer da eigene Seite
         }
 
-        private void Button_Click_5(object sender, RoutedEventArgs e)
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new FavoritePage());
+        }
+
+        private void Button_Click_4(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new SettingsPage());
         }
 
-        private void Button_Click_6(object sender, RoutedEventArgs e)
+        private void Button_Click_5(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new HelpPage());
         }
 
-        private void Button_Click_7(object sender, RoutedEventArgs e)
+        private void Button_Click_6(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new LogoutPage());
+            this.NavigationService.Navigate(new SettingsPage());
         }
     }
 
-    public class FavoriteProfile
+    public class LikedProfile
     {
         public int ProfileId { get; set; }
         public string Username { get; set; }

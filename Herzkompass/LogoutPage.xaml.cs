@@ -54,5 +54,25 @@ namespace Herzkompass
         {
             this.NavigationService.Navigate(new SwipePage());
         }
+
+        private void Button_Click_4(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new LikePage());
+        }
+
+        private void Button_Click_5(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new FavoritePage());
+        }
+
+        private void Button_Click_6(object sender, RoutedEventArgs e)
+        {
+            this.NavigationService.Navigate(new HelpPage());
+        }
+
+        private void Button_Click_7(object sender, RoutedEventArgs e)
+        {
+            // leer da eigene seite
+        }
     }
 }

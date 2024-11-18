@@ -31,7 +31,7 @@ namespace Herzkompass
             {
                 Connection.Open();
                 Datenbankverbindung = true;
-                MessageBox.Show("MySQL Verbindung aufgebaut"); // nur für den Entwickler um zu sehen ob die Verbindung klappt
+                //MessageBox.Show("MySQL Verbindung aufgebaut"); // nur für den Entwickler um zu sehen ob die Verbindung klappt
             }
             catch (Exception e)
             {
