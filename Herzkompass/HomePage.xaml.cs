@@ -1,35 +1,36 @@
 ﻿using MySqlConnector;
-using System;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows;
 
 namespace Herzkompass
 {
     public partial class HomePage : Page
     {
-        private DatabaseManager dbManager;
-        int loggedInUserId = UserSession.UserId;
+        private DatabaseManager dbManager; // Verwalter der Datenbankverbindung
+        int loggedInUserId = UserSession.UserId; // ID des aktuell eingeloggten Benutzers
 
         public HomePage()
         {
             InitializeComponent();
             dbManager = new DatabaseManager();
-            dbManager.InitConnection();
-            LoadUserDetails(loggedInUserId);
+            dbManager.InitConnection(); // Initialisiert die Datenbankverbindung
+            LoadUserDetails(loggedInUserId); // Lädt die Benutzerdetails
         }
 
+        // Lädt die Details des Benutzers aus der Datenbank
         public void LoadUserDetails(int userId)
         {
             try
             {
-                // Variablen für Benutzerdaten
+                // Variablen für die Benutzerdaten initialisieren
                 string benutzername = "";
                 string profilbild = "";
                 string wohnort = "";
                 string ueberMich = "";
                 DateTime? geburtsdatum = null;
 
+                // SQL-Abfrage zur Abholung der Benutzerdetails
                 MySqlCommand command = dbManager.Connection.CreateCommand();
                 command.CommandText = @"
                     SELECT a.benutzername, kp.profilbild, kp.geburtstag, kp.wohnort, kp.ueber_mich
@@ -42,6 +43,7 @@ namespace Herzkompass
                 {
                     if (reader.Read())
                     {
+                        // Werte aus der Datenbank lesen
                         benutzername = reader.GetString("benutzername");
                         profilbild = reader.IsDBNull(reader.GetOrdinal("profilbild")) ? "" : reader.GetString("profilbild");
                         wohnort = reader.IsDBNull(reader.GetOrdinal("wohnort")) ? "Nicht angegeben" : reader.GetString("wohnort");
@@ -50,10 +52,10 @@ namespace Herzkompass
                     }
                 }
 
-                // Setze den Benutzernamen und die Profilinformationen
+                // Benutzerdaten im UI setzen
                 txtUserProfileInfo.Text = $"Benutzername: {benutzername}\n";
 
-                // Berechnung des Alters, falls Geburtsdatum vorhanden
+                // Alter berechnen und anzeigen
                 if (geburtsdatum.HasValue)
                 {
                     int alter = CalculateAge(geburtsdatum.Value);
@@ -79,14 +81,17 @@ namespace Herzkompass
             }
             catch (MySqlException ex)
             {
+                // Fehlermeldung bei Datenbankproblemen
                 MessageBox.Show("Datenbankfehler: " + ex.Message, "Fehler");
             }
             catch (Exception ex)
             {
+                // Fehlermeldung bei unerwarteten Problemen
                 MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten: " + ex.Message, "Fehler");
             }
         }
 
+        // Berechnet das Alter basierend auf dem Geburtsdatum
         private int CalculateAge(DateTime birthDate)
         {
             DateTime today = DateTime.Today;
@@ -95,6 +100,7 @@ namespace Herzkompass
             return age;
         }
 
+        // Navigation zu anderen Seiten durch Button-Klick
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new LogoutPage());
@@ -122,7 +128,7 @@ namespace Herzkompass
 
         private void Button_Click_5(object sender, RoutedEventArgs e)
         {
-            // leer da eigene Seite
+            // Leer, da dies die aktuelle Seite ist
         }
 
         private void Button_Click_6(object sender, RoutedEventArgs e)

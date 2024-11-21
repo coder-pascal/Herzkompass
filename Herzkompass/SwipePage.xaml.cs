@@ -10,20 +10,21 @@ namespace Herzkompass
 {
     public partial class SwipePage : Page
     {
-        private DatabaseManager dbManager;
-        private int loggedInUserId = UserSession.UserId;
-        private List<Profile> profileList = new List<Profile>();
-        private int currentIndex = 0;
+        private DatabaseManager dbManager; // Verwalter für die Datenbankverbindung
+        private int loggedInUserId = UserSession.UserId; // ID des aktuell eingeloggten Benutzers
+        private List<Profile> profileList = new List<Profile>(); // Liste von Profilen
+        private int currentIndex = 0; // Index des aktuell angezeigten Profils
 
         public SwipePage()
         {
-            InitializeComponent();
-            dbManager = new DatabaseManager();
-            dbManager.InitConnection();
-            LoadProfiles();
-            DisplayProfile();
+            InitializeComponent(); // Initialisiert die XAML-Komponenten
+            dbManager = new DatabaseManager(); // Erstellt eine Instanz des DatabaseManagers
+            dbManager.InitConnection(); // Initialisiert die Datenbankverbindung
+            LoadProfiles(); // Lädt die Profile aus der Datenbank
+            DisplayProfile(); // Zeigt das erste Profil an
         }
 
+        // Lädt Profile aus der Datenbank
         private void LoadProfiles()
         {
             try
@@ -38,13 +39,14 @@ namespace Herzkompass
 
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
-                    cmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId);
+                    cmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId); // Fügt die Benutzer-ID als Parameter hinzu
 
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (MySqlDataReader reader = cmd.ExecuteReader()) // Führt die Abfrage aus
                     {
-                        profileList.Clear();
-                        while (reader.Read())
+                        profileList.Clear(); // Leert die Liste der Profile
+                        while (reader.Read()) // Liest jedes Profil
                         {
+                            // Fügt jedes Profil zur Liste hinzu
                             profileList.Add(new Profile
                             {
                                 AccountId = Convert.ToInt32(reader["account_id"]),
@@ -59,67 +61,73 @@ namespace Herzkompass
                 }
 
                 var random = new Random();
-                profileList = profileList.OrderBy(x => random.Next()).ToList();
+                profileList = profileList.OrderBy(x => random.Next()).ToList(); // Mischt die Profile zufällig
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fehler beim Laden der Profile: " + ex.Message);
+                MessageBox.Show("Fehler beim Laden der Profile: " + ex.Message); // Fehlermeldung, falls etwas schiefgeht
             }
         }
 
+        // Zeigt das nächste Profil an
         private void DisplayProfile()
         {
-            if (currentIndex < profileList.Count)
+            if (currentIndex < profileList.Count) // Überprüft, ob noch Profile vorhanden sind
             {
-                var profile = profileList[currentIndex];
+                var profile = profileList[currentIndex]; // Holt das aktuelle Profil
 
-                txtName.Text = profile.Username;
-                txtAge.Text = CalculateAge(profile.Birthday).ToString();
-                txtLocation.Text = profile.Location;
-                txtAboutMe.Text = profile.AboutMe;
+                txtName.Text = profile.Username; // Setzt den Benutzernamen
+                txtAge.Text = CalculateAge(profile.Birthday).ToString(); // Berechnet und zeigt das Alter
+                txtLocation.Text = profile.Location; // Setzt den Wohnort
+                txtAboutMe.Text = profile.AboutMe; // Setzt den Text "Über mich"
 
-                if (!string.IsNullOrEmpty(profile.ProfileImagePath))
+                if (!string.IsNullOrEmpty(profile.ProfileImagePath)) // Überprüft, ob ein Profilbild vorhanden ist
                 {
-                    imgProfile.Source = new BitmapImage(new Uri(profile.ProfileImagePath, UriKind.RelativeOrAbsolute));
+                    imgProfile.Source = new BitmapImage(new Uri(profile.ProfileImagePath, UriKind.RelativeOrAbsolute)); // Zeigt das Profilbild an
                 }
                 else
                 {
-                    imgProfile.Source = null;
+                    imgProfile.Source = null; // Setzt das Bild auf null, wenn keines vorhanden ist
                 }
 
-                currentIndex++;
+                currentIndex++; // Erhöht den Index für das nächste Profil
             }
             else
             {
-                MessageBox.Show("Keine weiteren Profile zum Anzeigen.");
+                MessageBox.Show("Keine weiteren Profile zum Anzeigen."); // Zeigt eine Nachricht an, wenn keine Profile mehr übrig sind
             }
         }
 
+        // Berechnet das Alter basierend auf dem Geburtsdatum
         private int CalculateAge(DateTime birthdate)
         {
             int age = DateTime.Now.Year - birthdate.Year;
-            if (DateTime.Now.DayOfYear < birthdate.DayOfYear)
-                age--;
+            if (DateTime.Now.DayOfYear < birthdate.DayOfYear) // Überprüft, ob der Geburtstag in diesem Jahr schon war
+                age--; // Wenn nicht, wird das Alter um 1 verringert
             return age;
         }
 
+        // Wird aufgerufen, wenn der "Dislike"-Button gedrückt wird
         private void BtnDislike_Click(object sender, RoutedEventArgs e)
         {
-            DisplayProfile();
+            DisplayProfile(); // Zeigt das nächste Profil an
         }
 
+        // Wird aufgerufen, wenn der "Favorite"-Button gedrückt wird
         private void BtnFavorite_Click(object sender, RoutedEventArgs e)
         {
-            SaveFavorite(profileList[currentIndex - 1].AccountId);
-            DisplayProfile();
+            SaveFavorite(profileList[currentIndex - 1].AccountId); // Speichert das Profil als Favorit
+            DisplayProfile(); // Zeigt das nächste Profil an
         }
 
+        // Wird aufgerufen, wenn der "Like"-Button gedrückt wird
         private void BtnLike_Click(object sender, RoutedEventArgs e)
         {
-            SaveLike(profileList[currentIndex - 1].AccountId);
-            DisplayProfile();
+            SaveLike(profileList[currentIndex - 1].AccountId); // Speichert das Profil als "Like"
+            DisplayProfile(); // Zeigt das nächste Profil an
         }
 
+        // Speichert ein "Like" für das Profil
         private void SaveLike(int likedProfileId)
         {
             try
@@ -127,17 +135,18 @@ namespace Herzkompass
                 string query = "INSERT INTO profile_likes (liker_id, liked_profile_id) VALUES (@likerId, @likedProfileId)";
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
-                    cmd.Parameters.AddWithValue("@likerId", loggedInUserId);
-                    cmd.Parameters.AddWithValue("@likedProfileId", likedProfileId);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@likerId", loggedInUserId); // Fügt die ID des Benutzers hinzu
+                    cmd.Parameters.AddWithValue("@likedProfileId", likedProfileId); // Fügt die ID des "gelikten" Profils hinzu
+                    cmd.ExecuteNonQuery(); // Führt die Abfrage aus
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fehler beim Speichern des Likes: " + ex.Message);
+                MessageBox.Show("Fehler beim Speichern des Likes: " + ex.Message); // Fehlermeldung, falls etwas schiefgeht
             }
         }
 
+        // Speichert ein "Favorit" für das Profil
         private void SaveFavorite(int favoriteProfileId)
         {
             try
@@ -145,60 +154,68 @@ namespace Herzkompass
                 string query = "INSERT INTO profile_favorites (favoriter_id, favorite_profile_id) VALUES (@favoriterId, @favoriteProfileId)";
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
-                    cmd.Parameters.AddWithValue("@favoriterId", loggedInUserId);
-                    cmd.Parameters.AddWithValue("@favoriteProfileId", favoriteProfileId);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@favoriterId", loggedInUserId); // Fügt die ID des Benutzers hinzu
+                    cmd.Parameters.AddWithValue("@favoriteProfileId", favoriteProfileId); // Fügt die ID des Favoriten hinzu
+                    cmd.ExecuteNonQuery(); // Führt die Abfrage aus
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fehler beim Speichern des Favoriten: " + ex.Message);
+                MessageBox.Show("Fehler beim Speichern des Favoriten: " + ex.Message); // Fehlermeldung, falls etwas schiefgeht
             }
         }
 
+        // Navigiert zur Startseite
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new HomePage());
         }
 
+        // Navigiert zur Einstellungsseite
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new SettingsPage());
         }
 
+        // Navigiert zur Logout-Seite
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new LogoutPage());
         }
 
+        // Button ohne Funktion
         private void Button_Click_3(object sender, RoutedEventArgs e)
         {
             //leer da auf eigene Seite
         }
 
+        // Navigiert zur Like-Seite
         private void Button_Click_4(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new LikePage());
         }
 
+        // Navigiert zur Favoriten-Seite
         private void Button_Click_5(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new FavoritePage());
         }
 
+        // Navigiert zur Hilfeseite
         private void Button_Click_6(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new HelpPage());
         }
     }
 
+    // Klasse für Profile
     public class Profile
     {
-        public int AccountId { get; set; }
-        public string Username { get; set; }
-        public DateTime Birthday { get; set; }
-        public string Location { get; set; }
-        public string AboutMe { get; set; }
-        public string ProfileImagePath { get; set; }
+        public int AccountId { get; set; } // ID des Profils
+        public string Username { get; set; } // Benutzername
+        public DateTime Birthday { get; set; } // Geburtsdatum
+        public string Location { get; set; } // Wohnort
+        public string AboutMe { get; set; } // Text "Über mich"
+        public string ProfileImagePath { get; set; } // Pfad zum Profilbild
     }
 }

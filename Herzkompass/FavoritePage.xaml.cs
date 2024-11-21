@@ -1,33 +1,32 @@
-﻿using System;
+﻿using MySqlConnector;
 using System.Collections.ObjectModel;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
-using MySqlConnector;
+using System.Windows;
 
 namespace Herzkompass
 {
     public partial class FavoritePage : Page
     {
-        private DatabaseManager dbManager;
-        private int loggedInUserId = UserSession.UserId;
-        public ObservableCollection<FavoriteProfile> FavoriteProfiles { get; set; }
+        private DatabaseManager dbManager; // Verwalter der Datenbankverbindung
+        private int loggedInUserId = UserSession.UserId; // ID des aktuell eingeloggten Benutzers
+        public ObservableCollection<FavoriteProfile> FavoriteProfiles { get; set; } // Sammlung der Favoritenprofile
 
         public FavoritePage()
         {
             InitializeComponent();
             dbManager = new DatabaseManager();
-            dbManager.InitConnection();
+            dbManager.InitConnection(); // Initialisiert die Datenbankverbindung
 
             FavoriteProfiles = new ObservableCollection<FavoriteProfile>();
-            DataContext = this; // Bind the page's data context to itself for binding
-            LoadFavoriteProfiles();
+            DataContext = this; // Setzt den Datenkontext auf die Seite selbst
+            LoadFavoriteProfiles(); // Lädt die Favoritenprofile aus der Datenbank
         }
 
         private void LoadFavoriteProfiles()
         {
             try
             {
+                // SQL-Abfrage zum Laden der Favoritenprofile
                 string query = @"
                     SELECT a.id, a.benutzername, kp.profilbild, kp.geburtstag, kp.wohnort
                     FROM profile_favorites pf
@@ -37,27 +36,32 @@ namespace Herzkompass
 
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
+                    // Parameter für die SQL-Abfrage
                     cmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId);
 
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
-                        FavoriteProfiles.Clear();
+                        FavoriteProfiles.Clear(); // Löscht vorhandene Einträge
                         while (reader.Read())
                         {
-                            int profileId = reader.GetInt32("id");
-                            string username = reader["benutzername"].ToString();
-                            string profileImagePath = reader.IsDBNull(reader.GetOrdinal("profilbild")) ? null : reader["profilbild"].ToString();
-                            string location = reader.IsDBNull(reader.GetOrdinal("wohnort")) ? "Nicht angegeben" : reader["wohnort"].ToString();
-                            DateTime? birthday = reader.IsDBNull(reader.GetOrdinal("geburtstag")) ? (DateTime?)null : reader.GetDateTime("geburtstag");
+                            int profileId = reader.GetInt32("id"); // ID des Profils
+                            string username = reader["benutzername"].ToString(); // Benutzername des Profils
+                            string profileImagePath = reader.IsDBNull(reader.GetOrdinal("profilbild"))
+                                ? null : reader["profilbild"].ToString(); // Pfad zum Profilbild
+                            string location = reader.IsDBNull(reader.GetOrdinal("wohnort"))
+                                ? "Nicht angegeben" : reader["wohnort"].ToString(); // Wohnort
+                            DateTime? birthday = reader.IsDBNull(reader.GetOrdinal("geburtstag"))
+                                ? (DateTime?)null : reader.GetDateTime("geburtstag"); // Geburtstag
 
-                            int? age = birthday.HasValue ? CalculateAge(birthday.Value) : (int?)null;
+                            int? age = birthday.HasValue ? CalculateAge(birthday.Value) : (int?)null; // Berechnet das Alter
 
+                            // Fügt das Profil zur Liste hinzu
                             FavoriteProfiles.Add(new FavoriteProfile
                             {
                                 ProfileId = profileId,
                                 Username = username,
                                 ProfileImagePath = string.IsNullOrEmpty(profileImagePath)
-                                    ? "/Images/benutzer.png" // Use a default image if none is provided
+                                    ? "/Images/benutzer.png" // Standardbild, wenn kein Bild vorhanden ist
                                     : profileImagePath,
                                 Age = age.HasValue ? $"{age.Value} Jahre" : "Alter: Nicht angegeben",
                                 Location = location
@@ -68,14 +72,17 @@ namespace Herzkompass
             }
             catch (MySqlException ex)
             {
+                // Fehlermeldung bei Datenbankproblemen
                 MessageBox.Show("Fehler beim Laden der Favoriten: " + ex.Message, "Fehler");
             }
             catch (Exception ex)
             {
+                // Fehlermeldung bei unerwarteten Problemen
                 MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten: " + ex.Message, "Fehler");
             }
         }
 
+        // Berechnet das Alter anhand des Geburtsdatums
         private int CalculateAge(DateTime birthDate)
         {
             int age = DateTime.Now.Year - birthDate.Year;
@@ -84,6 +91,7 @@ namespace Herzkompass
             return age;
         }
 
+        // Entfernt ein Favoritenprofil aus der Datenbank und Liste
         private void RemoveFavorite(int profileId)
         {
             try
@@ -92,11 +100,11 @@ namespace Herzkompass
 
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
-                    cmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId);
-                    cmd.Parameters.AddWithValue("@profileId", profileId);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@loggedInUserId", loggedInUserId); // Benutzer-ID
+                    cmd.Parameters.AddWithValue("@profileId", profileId); // Profil-ID
+                    cmd.ExecuteNonQuery(); // Führt die Löschanweisung aus
 
-                    // Entferne das Profil aus der Liste
+                    // Entfernt das Profil aus der ObservableCollection
                     var profileToRemove = FavoriteProfiles.FirstOrDefault(p => p.ProfileId == profileId);
                     if (profileToRemove != null)
                     {
@@ -106,14 +114,17 @@ namespace Herzkompass
             }
             catch (MySqlException ex)
             {
+                // Fehlermeldung bei Datenbankproblemen
                 MessageBox.Show("Fehler beim Entfernen des Favoriten: " + ex.Message, "Fehler");
             }
             catch (Exception ex)
             {
+                // Fehlermeldung bei unerwarteten Problemen
                 MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten: " + ex.Message, "Fehler");
             }
         }
 
+        // Event-Handler für das Entfernen eines Favoriten durch Button-Klick
         private void OnRemoveFavoriteClick(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.Tag is int profileId)
@@ -122,6 +133,7 @@ namespace Herzkompass
             }
         }
 
+        // Navigation zu anderen Seiten durch Button-Klick
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new SwipePage());
@@ -144,7 +156,7 @@ namespace Herzkompass
 
         private void Button_Click_4(object sender, RoutedEventArgs e)
         {
-            //leer da eigene Seite
+            // Leer, da dies die aktuelle Seite ist
         }
 
         private void Button_Click_5(object sender, RoutedEventArgs e)
@@ -163,12 +175,13 @@ namespace Herzkompass
         }
     }
 
+    // Modellklasse für ein Favoritenprofil
     public class FavoriteProfile
     {
-        public int ProfileId { get; set; }
-        public string Username { get; set; }
-        public string ProfileImagePath { get; set; }
-        public string Age { get; set; }
-        public string Location { get; set; }
+        public int ProfileId { get; set; } // ID des Profils
+        public string Username { get; set; } // Benutzername
+        public string ProfileImagePath { get; set; } // Pfad zum Profilbild
+        public string Age { get; set; } // Alter als String
+        public string Location { get; set; } // Wohnort
     }
 }

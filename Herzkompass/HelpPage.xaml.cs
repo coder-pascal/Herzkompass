@@ -1,56 +1,62 @@
-﻿using System;
-using System.Windows;
+﻿using MySqlConnector;
 using System.Windows.Controls;
-using MySqlConnector;
+using System.Windows;
 
 namespace Herzkompass
 {
     public partial class HelpPage : Page
     {
-        private DatabaseManager dbManager;
-        private int loggedInUserId = UserSession.UserId; // Angemeldeter Benutzer
+        private DatabaseManager dbManager; // Verwalter der Datenbankverbindung
+        private int loggedInUserId = UserSession.UserId; // ID des aktuell eingeloggten Benutzers
 
         public HelpPage()
         {
             InitializeComponent();
             dbManager = new DatabaseManager();
-            dbManager.InitConnection();
+            dbManager.InitConnection(); // Initialisiert die Datenbankverbindung
         }
 
+        // Event-Handler für das Einreichen eines Tickets
         private void OnSubmitTicketClick(object sender, RoutedEventArgs e)
         {
-            string ticketContent = TicketInput.Text.Trim();
+            string ticketContent = TicketInput.Text.Trim(); // Inhalt des Tickets vom Eingabefeld
 
             if (string.IsNullOrEmpty(ticketContent))
             {
+                // Zeigt eine Fehlermeldung, wenn kein Text eingegeben wurde
                 MessageBox.Show("Bitte geben Sie ein Anliegen ein.", "Hinweis");
                 return;
             }
 
             try
             {
+                // SQL-Abfrage zum Einfügen eines neuen Tickets in die Datenbank
                 string query = "INSERT INTO tickets (account_id, ticket_text, created_at) VALUES (@accountId, @ticketText, NOW())";
 
                 using (MySqlCommand cmd = new MySqlCommand(query, dbManager.Connection))
                 {
-                    cmd.Parameters.AddWithValue("@accountId", loggedInUserId);
-                    cmd.Parameters.AddWithValue("@ticketText", ticketContent);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@accountId", loggedInUserId); // Benutzer-ID als Parameter
+                    cmd.Parameters.AddWithValue("@ticketText", ticketContent); // Ticket-Text als Parameter
+                    cmd.ExecuteNonQuery(); // Führt die Abfrage aus
                 }
 
+                // Zeigt eine Erfolgsmeldung und leert das Eingabefeld
                 MessageBox.Show("Ihr Anliegen wurde erfolgreich eingereicht. Wir melden uns bei Ihnen!", "Erfolg");
                 TicketInput.Clear();
             }
             catch (MySqlException ex)
             {
+                // Zeigt eine Fehlermeldung bei Datenbankproblemen
                 MessageBox.Show("Fehler beim Einreichen des Tickets: " + ex.Message, "Fehler");
             }
             catch (Exception ex)
             {
+                // Zeigt eine Fehlermeldung bei unerwarteten Problemen
                 MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten: " + ex.Message, "Fehler");
             }
         }
 
+        // Navigation zu anderen Seiten durch Button-Klick
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.NavigationService.Navigate(new HomePage());
@@ -78,7 +84,7 @@ namespace Herzkompass
 
         private void Button_Click_5(object sender, RoutedEventArgs e)
         {
-            // leer da eigene Seite
+            // Leer, da dies die aktuelle Seite ist
         }
 
         private void Button_Click_6(object sender, RoutedEventArgs e)

@@ -19,11 +19,12 @@ namespace Herzkompass
             LoadUserData();
         }
 
+        // Lädt die Benutzerdaten aus der Datenbank
         private void LoadUserData()
         {
             try
             {
-                // Lade die Grunddaten aus der 'accounts' Tabelle
+                // SQL-Query, um Benutzername und Email zu holen
                 string queryAccounts = "SELECT benutzername, email FROM accounts WHERE id = @loggedInUserId";
                 using (MySqlCommand cmdAccounts = new MySqlCommand(queryAccounts, dbManager.Connection))
                 {
@@ -32,13 +33,13 @@ namespace Herzkompass
                     {
                         if (reader.Read())
                         {
-                            txtUsername.Text = reader["benutzername"].ToString();
-                            txtEmail.Text = reader["email"].ToString();
+                            txtUsername.Text = reader["benutzername"].ToString(); // Benutzername setzen
+                            txtEmail.Text = reader["email"].ToString(); // Email setzen
                         }
                     }
                 }
 
-                // Lade die Profildaten aus der 'kundenprofil' Tabelle
+                // SQL-Query, um Profilinformationen zu holen
                 string queryProfile = "SELECT geburtstag, wohnort, ueber_mich, profilbild FROM kundenprofil WHERE account_id = @loggedInUserId";
                 using (MySqlCommand cmdProfile = new MySqlCommand(queryProfile, dbManager.Connection))
                 {
@@ -51,19 +52,20 @@ namespace Herzkompass
                             DateTime geburtstag = Convert.ToDateTime(reader["geburtstag"]);
                             txtAge.Text = geburtstag.ToString("dd.MM.yyyy"); // Umwandlung in deutsches Format
 
-                            txtLocation.Text = reader["wohnort"].ToString();
-                            txtAboutMe.Text = reader["ueber_mich"].ToString();
-                            txtProfileImageLink.Text = reader["profilbild"].ToString();
+                            txtLocation.Text = reader["wohnort"].ToString(); // Wohnort setzen
+                            txtAboutMe.Text = reader["ueber_mich"].ToString(); // Über mich setzen
+                            txtProfileImageLink.Text = reader["profilbild"].ToString(); // Profilbild-Link setzen
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fehler beim Laden der Benutzerdaten: " + ex.Message);
+                MessageBox.Show("Fehler beim Laden der Benutzerdaten: " + ex.Message); // Fehlerbehandlung
             }
         }
 
+        // Speichert die Benutzereinstellungen
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             string username = txtUsername.Text;
@@ -75,17 +77,17 @@ namespace Herzkompass
             string profileImageLink = txtProfileImageLink.Text;
             string birthdate = txtAge.Text;
 
-            // Password validation
+            // Überprüfung, ob die Passwörter übereinstimmen
             if (password != confirmPassword)
             {
-                MessageBox.Show("Passwörter stimmen nicht überein!");
+                MessageBox.Show("Passwörter stimmen nicht überein!"); // Fehlermeldung, wenn Passwörter nicht übereinstimmen
                 return;
             }
 
-            // Validation for birthdate
+            // Überprüfung des Geburtsdatums
             if (!ValidateBirthdate(birthdate))
             {
-                MessageBox.Show("Bitte geben Sie das Geburtsdatum im Format TT.MM.JJJJ ein.");
+                MessageBox.Show("Bitte geben Sie das Geburtsdatum im Format TT.MM.JJJJ ein."); // Fehlermeldung bei ungültigem Geburtsdatum
                 return;
             }
 
@@ -93,9 +95,9 @@ namespace Herzkompass
 
             try
             {
-                using (MySqlTransaction transaction = dbManager.Connection.BeginTransaction())
+                using (MySqlTransaction transaction = dbManager.Connection.BeginTransaction()) // Transaktion starten
                 {
-                    // Update 'accounts' table
+                    // SQL-Query für das Update von Benutzername und Email
                     string queryAccounts = "UPDATE accounts SET benutzername = @username, email = @email" +
                                            (hashedPassword != null ? ", passwort = @password" : "") +
                                            " WHERE id = @loggedInUserId";
@@ -105,13 +107,13 @@ namespace Herzkompass
                         cmdAccounts.Parameters.AddWithValue("@email", email);
                         if (hashedPassword != null)
                         {
-                            cmdAccounts.Parameters.AddWithValue("@password", hashedPassword);
+                            cmdAccounts.Parameters.AddWithValue("@password", hashedPassword); // Passwort hinzufügen, wenn gesetzt
                         }
                         cmdAccounts.Parameters.AddWithValue("@loggedInUserId", loggedInUserId);
-                        cmdAccounts.ExecuteNonQuery();
+                        cmdAccounts.ExecuteNonQuery(); // Query ausführen
                     }
 
-                    // Check if profile exists in 'kundenprofil'
+                    // Überprüfung, ob bereits ein Profil existiert
                     string checkProfileQuery = "SELECT COUNT(*) FROM kundenprofil WHERE account_id = @loggedInUserId";
                     using (MySqlCommand cmdCheckProfile = new MySqlCommand(checkProfileQuery, dbManager.Connection, transaction))
                     {
@@ -121,14 +123,14 @@ namespace Herzkompass
                         string queryProfile;
                         if (profileExists == 0)
                         {
-                            // Insert new profile if not exists
+                            // Wenn das Profil noch nicht existiert, wird es eingefügt
                             queryProfile = @"
                             INSERT INTO kundenprofil (account_id, geburtstag, wohnort, ueber_mich, profilbild) 
                             VALUES (@accountId, @geburtstag, @wohnort, @ueber_mich, @profilbild)";
                         }
                         else
                         {
-                            // Update existing profile
+                            // Profil aktualisieren, wenn es schon existiert
                             queryProfile = @"
                             UPDATE kundenprofil 
                             SET geburtstag = @geburtstag, wohnort = @wohnort, ueber_mich = @ueber_mich, profilbild = @profilbild 
@@ -142,24 +144,24 @@ namespace Herzkompass
                             string mysqlFormattedDate = birthdateParsed.ToString("yyyy-MM-dd");
 
                             cmdProfile.Parameters.AddWithValue("@geburtstag", mysqlFormattedDate); // Das umformatierte Datum
-                            cmdProfile.Parameters.AddWithValue("@wohnort", location);
-                            cmdProfile.Parameters.AddWithValue("@ueber_mich", aboutMe);
-                            cmdProfile.Parameters.AddWithValue("@profilbild", profileImageLink);
-                            cmdProfile.ExecuteNonQuery();
+                            cmdProfile.Parameters.AddWithValue("@wohnort", location); // Wohnort
+                            cmdProfile.Parameters.AddWithValue("@ueber_mich", aboutMe); // Über mich
+                            cmdProfile.Parameters.AddWithValue("@profilbild", profileImageLink); // Profilbild-Link
+                            cmdProfile.ExecuteNonQuery(); // Query ausführen
                         }
                     }
 
-                    transaction.Commit();
-                    MessageBox.Show("Einstellungen erfolgreich gespeichert!");
+                    transaction.Commit(); // Transaktion abschließen
+                    MessageBox.Show("Einstellungen erfolgreich gespeichert!"); // Erfolgsnachricht
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fehler beim Speichern der Einstellungen: " + ex.Message);
+                MessageBox.Show("Fehler beim Speichern der Einstellungen: " + ex.Message); // Fehlerbehandlung
             }
         }
 
-        // Validate the birthdate format (TT.MM.JJJJ)
+        // Validiert das Geburtsdatum im Format TT.MM.JJJJ
         private bool ValidateBirthdate(string birthdate)
         {
             DateTime result;
@@ -167,23 +169,24 @@ namespace Herzkompass
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out result);
 
-            return isValid;
+            return isValid; // Gibt zurück, ob das Datum gültig ist
         }
 
+        // Löscht den Account des Benutzers
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             string deletePassword = txtDeletePassword.Password;
 
-            // Ensure the password field is not empty
+            // Sicherstellen, dass das Passwortfeld nicht leer ist
             if (string.IsNullOrEmpty(deletePassword))
             {
-                MessageBox.Show("Bitte geben Sie Ihr Passwort ein, um den Account zu löschen.");
+                MessageBox.Show("Bitte geben Sie Ihr Passwort ein, um den Account zu löschen."); // Fehlermeldung bei leerem Passwortfeld
                 return;
             }
 
             try
             {
-                // Retrieve the stored hashed password from the database
+                // Ruft das gespeicherte Passwort aus der Datenbank ab
                 string queryGetPassword = "SELECT passwort FROM accounts WHERE id = @loggedInUserId";
                 string storedHashedPassword = string.Empty;
 
@@ -194,24 +197,24 @@ namespace Herzkompass
                     {
                         if (reader.Read())
                         {
-                            storedHashedPassword = reader["passwort"].ToString();
+                            storedHashedPassword = reader["passwort"].ToString(); // Passwort setzen
                         }
                     }
                 }
 
-                // Verify if the entered password matches the stored hashed password using BCrypt.CheckPassword
+                // Überprüft, ob das eingegebene Passwort mit dem gespeicherten Passwort übereinstimmt
                 if (!BCrypt.CheckPassword(deletePassword, storedHashedPassword))
                 {
-                    MessageBox.Show("Das eingegebene Passwort ist falsch.");
+                    MessageBox.Show("Das eingegebene Passwort ist falsch."); // Fehlermeldung bei falschem Passwort
                     return;
                 }
 
-                // Begin the deletion process: Delete the profile first, then the account
+                // Beginnt den Löschvorgang: Zuerst das Profil, dann das Konto löschen
                 using (MySqlTransaction transaction = dbManager.Connection.BeginTransaction())
                 {
                     try
                     {
-                        // Delete profile data
+                        // Löscht die Profildaten
                         string deleteProfileQuery = "DELETE FROM kundenprofil WHERE account_id = @loggedInUserId";
                         using (MySqlCommand cmdProfile = new MySqlCommand(deleteProfileQuery, dbManager.Connection, transaction))
                         {
@@ -219,7 +222,7 @@ namespace Herzkompass
                             cmdProfile.ExecuteNonQuery();
                         }
 
-                        // Delete account
+                        // Löscht das Benutzerkonto
                         string deleteAccountQuery = "DELETE FROM accounts WHERE id = @loggedInUserId";
                         using (MySqlCommand cmdAccount = new MySqlCommand(deleteAccountQuery, dbManager.Connection, transaction))
                         {
@@ -227,49 +230,49 @@ namespace Herzkompass
                             cmdAccount.ExecuteNonQuery();
                         }
 
-                        // Commit the transaction
+                        // Bestätigt die Transaktion
                         transaction.Commit();
-                        MessageBox.Show("Ihr Account wurde erfolgreich gelöscht.");
-                        this.NavigationService.Navigate(new LogoutPage()); // Redirect to logout page after deletion
+                        MessageBox.Show("Ihr Account wurde erfolgreich gelöscht."); // Erfolgsnachricht
+                        this.NavigationService.Navigate(new LogoutPage()); // Weiterleitung zur Logout-Seite
                     }
                     catch (Exception ex)
                     {
-                        // Rollback the transaction in case of error
+                        // Rollback der Transaktion im Falle eines Fehlers
                         transaction.Rollback();
-                        MessageBox.Show("Fehler beim Löschen des Accounts: " + ex.Message);
+                        MessageBox.Show("Fehler beim Löschen des Accounts: " + ex.Message); // Fehlerbehandlung
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Fehler beim Überprüfen des Passworts: " + ex.Message);
+                MessageBox.Show("Fehler beim Überprüfen des Passworts: " + ex.Message); // Fehlerbehandlung
             }
         }
 
-        // Navigation methods
+        // Navigationsmethoden
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new HomePage());
+            this.NavigationService.Navigate(new HomePage()); // Navigation zur Startseite
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new LogoutPage());
+            this.NavigationService.Navigate(new LogoutPage()); // Navigation zur Logout-Seite
         }
 
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new SwipePage());
+            this.NavigationService.Navigate(new SwipePage()); // Navigation zur Swipe-Seite
         }
 
         private void Button_Click_3(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new LikePage());
+            this.NavigationService.Navigate(new LikePage()); // Navigation zur Like-Seite
         }
 
         private void Button_Click_4(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new FavoritePage());
+            this.NavigationService.Navigate(new FavoritePage()); // Navigation zur Favoriten-Seite
         }
 
         private void Button_Click_5(object sender, RoutedEventArgs e)
@@ -279,7 +282,7 @@ namespace Herzkompass
 
         private void Button_Click_6(object sender, RoutedEventArgs e)
         {
-            this.NavigationService.Navigate(new HelpPage());
+            this.NavigationService.Navigate(new HelpPage()); // Navigation zur Hilfe-Seite
         }
     }
 }
